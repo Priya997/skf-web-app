@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+	<style>
+	* {
+		box-sizing: border-box;
+	}
+	.container {
+		max-height: 100vh;
+	}
+	.chat-container {
+		height: 75vh;
+		overflow-y: scroll; 
+		margin-bottom: 10px;
+	}
+	.box {
+		border: 2px solid #dedede;
+		background-color: #f1f1f1;
+		border-radius: 5px;
+		padding: 20px 10px;
+		margin: 10px 0;
+		width: 90%;
+	}
+
+	.darker {
+		border-color: #ccc;
+		background-color: #ddd;
+		margin-left: 9%;
+	}
+
+	img {
+	}
+
+	.box img {
+		margin-top: -10px;
+		float: left;
+		max-width: 60px;
+		width: 100%;
+		margin-right: 20px;
+		border-radius: 50%;
+	}
+
+	.box img.right {
+		float: right;
+		margin-left: 20px;
+		margin-right:0;
+	}
+
+	.time-right {
+		float: right;
+		color: #aaa;
+	}
+
+	.time-left {
+		float: left;
+		color: #999;
+	}
+	.message-box {
+		position: 
+	}
+</style>
+</head>
+<body>
+	<br/>
+	<h2 class="text-center">Web Knowledge Chatbot</h2>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-8 offset-md-2">
+				<div class="chat-container" id="chat-container">
+					
+					<div class="box darker">
+						<img src="images/bot.png" alt="Avatar" class="right">
+						<p>Hey! What do you want to ask me?</p>
+						<span class="time-left">11:01</span>
+					</div>
+				</div>
+
+				<div class="message-box">
+					<form id="chatform">
+						<div class="row">
+							<div class="col-md-10">
+								<input id="chatinput" class="form-control" placeholder="Type your message here..." />
+							</div>
+							<div class="col-md-2">
+								<button type="submit" class="btn btn-primary">Submit</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="jquery.min.js"></script>
+	<script type="text/javascript">
+		var last_ans_choices = null;
+		$("#chatform").submit(function(event) {
+			event.preventDefault();
+			var msg = $("#chatinput").val();
+			createMyMessage(msg);
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					if (xhttp.responseText.startsWith("[")) {
+						last_ans_choices = eval(xhttp.responseText);
+						createBotMessageChoices();
+					}
+					else
+						createBotMessage(xhttp.responseText);
+				}
+			};
+			if (last_ans_choices != null) {
+				xhttp.open("GET", "http://localhost:5000?q=" + encodeURIComponent(last_ans_choices[parseInt(msg)]), true);
+				xhttp.send();
+				last_ans_choices = null;
+			}
+			else {
+				xhttp.open("GET", "http://localhost:5000?q=" + encodeURIComponent(msg), true);
+				xhttp.send();
+			}
+			
+		});
+
+		function createMyMessage(msg) {
+			var dt = new Date();
+			var dd = dt.getHours();
+			var mm = dt.getMinutes();
+			if (mm < 10) mm = "0" + mm;
+			$(".chat-container").append(`
+				<div class="box">
+				<img src="images/person.jpg" alt="Avatar">
+				<p>${msg}</p>
+				<span class="time-right">${dd}:${mm}</span>
+				</div>
+				`);
+			$("#chatinput").val("");
+			var messagesHistoryElement = document.getElementById("chat-container");
+			messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
+		}
+
+		function createBotMessage(msg) {
+			var dt = new Date();
+			var dd = dt.getHours();
+			var mm = dt.getMinutes();
+			if (mm < 10) mm = "0" + mm;
+			$(".chat-container").append(`
+				<div class="box darker">
+				<img src="images/bot.png" class="right" alt="Avatar">
+				<p>${msg}</p>
+				<span class="time-left">${dd}:${mm}</span>
+				</div>
+				`);
+			var messagesHistoryElement = document.getElementById("chat-container");
+			messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
+		}
+
+		function createBotMessageChoices() {
+			//last_ans_choices
+			var dt = new Date();
+			var dd = dt.getHours();
+			var mm = dt.getMinutes();
+			if (mm < 10) mm = "0" + mm;
+			let msg = "Please select from these options:<br/>";
+			for (let i in last_ans_choices) {
+				msg += i + ": " + last_ans_choices[i] + "<br/>";
+			}
+			$(".chat-container").append(`
+				<div class="box darker">
+				<img src="images/bot.png" class="right" alt="Avatar">
+				<p>${msg}</p>
+				<span class="time-left">${dd}:${mm}</span>
+				</div>
+				`);
+			var messagesHistoryElement = document.getElementById("chat-container");
+			messagesHistoryElement.scrollTop = messagesHistoryElement.scrollHeight;
+		}
+
+	</script>
+</body>
+</html>
